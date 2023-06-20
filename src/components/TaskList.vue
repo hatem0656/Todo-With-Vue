@@ -1,5 +1,6 @@
 <template>
-  <div class="task-list">
+  <div class="loading" v-if="isLoading">Loading ....</div>
+  <div class="task-list" v-if="!isLoading">
     <!-- when key is changed the task is re-render and it catches the change of the checkbox -->
     <!-- In vue you can force a component to re-render by changing the key attribute -->
     <!-- You can bind the key attribute to reactive value and change the reactive value to force re-render -->
@@ -25,28 +26,28 @@
       </div>
       <i class="bi bi-x-lg delete" @click="deleteTask(task._id)"></i>
     </div>
-  </div>
-  <div class="task-container">
-    <h3>{{ leftTasks }} item{{ leftTasks > 1 ? "s" : "" }} left</h3>
+    <div class="filter-container">
+      <h3>{{ leftTasks }} item{{ leftTasks > 1 ? "s" : "" }} left</h3>
 
-    <span
-      @click="this.showOption = 'all'"
-      :class="{ active: optionState[0] }"
-      class="all"
-      >All</span
-    >
-    <span
-      @click="this.showOption = 'active'"
-      :class="{ active: optionState[1] }"
-      >Active</span
-    >
-    <span
-      @click="this.showOption = 'completed'"
-      class="completed"
-      :class="{ active: optionState[2] }"
-      >Completed</span
-    >
-    <span @click="clearCompleted">Clear Completed</span>
+      <span
+        @click="this.showOption = 'all'"
+        :class="{ active: optionState[0] }"
+        class="all"
+        >All</span
+      >
+      <span
+        @click="this.showOption = 'active'"
+        :class="{ active: optionState[1] }"
+        >Active</span
+      >
+      <span
+        @click="this.showOption = 'completed'"
+        class="completed"
+        :class="{ active: optionState[2] }"
+        >Completed</span
+      >
+      <span @click="clearCompleted" class="clear">Clear Completed</span>
+    </div>
   </div>
 </template>
 <script>
@@ -56,6 +57,7 @@ export default {
   data() {
     return {
       tasks: [],
+      isLoading: false,
       updated: false, //updated is used to make a new get request for tasks when a task is deleted
       check: false, // used to force the task to re-render to catch the changes of the checkbox (aslo used to update left tasks)
       showOption: "all",
@@ -93,8 +95,10 @@ export default {
       completedTasks.forEach((task) => this.deleteTask(task._id));
     },
   },
-  mounted() {
-    this.getTasks();
+  async mounted() {
+    this.isLoading = true;
+    await this.getTasks();
+    this.isLoading = false;
   },
   watch: {
     // when a task is deleted make a new get requeset
@@ -137,6 +141,19 @@ export default {
 </script>
 
 <style>
+.loading {
+  margin: 10px auto;
+  background-color: darkblue;
+  color: white;
+  font-size: 1.5rem;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .task-list {
   margin-top: 50px;
   display: flex;
@@ -190,31 +207,45 @@ export default {
   visibility: visible;
 }
 
-.task-container span,
-.task-container h3 {
+.filter-container {
+  max-width: 100%;
+  padding: 10px 12px;
+  background-color: var(--main-color);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  border-radius: 4px;
+}
+
+.filter-container span,
+.filter-container h3 {
   letter-spacing: 1px;
   display: inline-block;
   font-size: 0.7rem;
   font-weight: 600;
   color: var(--options-color);
 }
-
 @media (width > 576px) {
-  .task-container span,
-  .task-container h3 {
+  .filter-container span,
+  .filter-container h3 {
     font-size: 0.85rem;
   }
 }
-.task-container span {
+.filter-container span {
   cursor: pointer;
 }
+
 .all {
   margin-left: auto;
   margin-right: 7px;
 }
 .completed {
-  margin-right: auto;
   margin-left: 7px;
+}
+.clear {
+  width: 100%;
+  margin-top: 5px;
+  text-align: center;
 }
 @media (width > 576px) {
   .all {
@@ -224,7 +255,18 @@ export default {
     margin-left: 20px;
   }
 }
-.task-container span:hover {
+@media (width > 420px) {
+  .completed {
+    margin-right: auto;
+  }
+  .clear {
+    text-align: initial;
+    width: initial;
+    margin-top: 0;
+  }
+}
+
+.filter-container span:hover {
   color: var(--hover-color);
 }
 
